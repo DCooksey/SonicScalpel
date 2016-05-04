@@ -7,12 +7,6 @@
 #include <boost/lexical_cast.hpp>
 #include <stdio.h>
 #include <sndfile.hh>
-#include <portsf.h>
-#include <sndfile.hh>
-
-//Portsf lib required:
-PSF_PROPS props;
-int ofd;
 
 //To hold initially loaded in recording
 maxiSample initialSample, initialSampleTwo, resultingSample;
@@ -230,64 +224,6 @@ void create_file2 (const char * fname, int format)
     }
 }
 
-//ATTEMPT: PORTSF LIB
-void outSample(float sample) {
-
-    psf_sndWriteFloatFrames(ofd, &sample, 1);
-
-    //psf_sndWriteShortFrames(ofd, &sample, ifftDataSize);
-    //std::cout << "Sample: " << sample << std::endl;
-}
-
-void cleanUp(){
-    std::cout << "Cleaning up!" << std::endl;
-
-    int err1, err2;
-    err1 = psf_sndClose(ofd);
-    err2 = psf_finish();
-
-    if(err1 || err2){
-        std::cout << "An error occured whilst writing WAV_FILE !" << std::endl;
-    }
-    else{
-         std::cout << "DONE!" << std::endl;
-    }
-
-
-}
-
-void initWAV(){
-    props.srate = 44100;
-    props.chans = 1;
-    //props.samptype = PSF_SAMP_IEEE_FLOAT;
-    props.samptype = PSF_SAMP_16;
-    props.format = PSF_STDWAVE;
-    props.chformat = STDWAVE;
-    psf_init();
-    ofd = psf_sndCreate("Heello.wav", &props, 0, 0, PSF_CREATE_RDWR);
-    //std::cout << "Nothing to initialise! FAILED." << std::endl;
-}
-
-void synthesize(){
-
-    initWAV();
-
-    double sample_increment = (512 * m) / 44100;
-    double phase = 0;
-    float sample;
-   // const int duration = 4;
-
-    for(int j = 0; j < ifftDataSize; j++){
-        sample = audioStream[j];
-        outSample(sample);
-
-        phase += sample_increment;
-            if(phase > (n * m)) phase -= (n*m);
-    }
-
-    cleanUp();
-}
-
 //ATTEMPT: Standard Libraries
 template <typename T>
 void write(std::ofstream& stream, const T& t) {
@@ -316,7 +252,6 @@ void writeWAVData(const char* outFile, SampleType* buf, size_t bufSize,
     stream.write((const char*)&sz, 4);
     stream.write((const char*)buf, bufSize);
 }
-
 
 void vToCSV(){
 
@@ -563,7 +498,6 @@ void analyseSample3(){
 
 }
 
-
 void buildWAV(){
 
     std::cout << "Writing IFFT data to Audio Data stream!" << std::endl;
@@ -757,8 +691,6 @@ void setup() {
 
     //SNDFILE CREATE WAV
     create_file (fname, SF_FORMAT_WAV | SF_FORMAT_PCM_16) ;
-    //PORTSF CREATE WAV
-    synthesize();
 
     mickRAW();
 
